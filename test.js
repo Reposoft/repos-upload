@@ -1,9 +1,16 @@
 var Rowdata = require('./');
 
-Rowdata.prepare({
-  boardsUrl: '/svn/lean-data/admin/yolean-boards.json',
-  templatesUrl: '/svn/lean/Templates/VP/'
-}).then(function(result) { console.log(result); });
+var rowData = new Rowdata({
+  hostname: 'http://localhost',
+  dataRepository: '/svn/lean-data'
+});
+
+rowData.createFile('/svn/lean-data/boards/testing45/P3/rowdata.json', [], console.log.bind(console));
+
+// Rowdata.prepare({
+//   boardsUrl: '/svn/lean-data/admin/yolean-boards.json',
+//   templatesUrl: '/svn/lean/Templates/VP/'
+// }).then(function(result) { console.log(result); });
 
 // Rowdata.addFile('https://labs01/svn/lean-data/squad5/tech12/a/b/c/d/e/f/rows1.json', JSON.stringify([
 //   {
