@@ -1,9 +1,9 @@
 var Promise = this.Promise || require('promise');
 var request = require('superagent');
 
-function Rowdata(config) {
-  if (!this instanceof Rowdata) {
-    return new Rowdata(config);
+function ReposUpload(config) {
+  if (!this instanceof ReposUpload) {
+    return new ReposUpload(config);
   }
 
   if (!config.hostname) throw new Error('Missing option "hostname" [http://localhost]');
@@ -189,4 +189,4 @@ function compileData(rowData) {
   return JSON.stringify(rowData);
 }
 
-module.exports = Rowdata;
+exports.ReposUpload = ReposUpload;
