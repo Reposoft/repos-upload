@@ -1,60 +1,35 @@
 var chai = require('chai');
+var expect = chai.expect;
 chai.should();
 
-var Rowdata = require('../');
+var reposUpload = require('../');
 
-var UUID_LENGTH = 36;
+describe('repos-upload', function () {
 
-describe('yolean-rowdata', function () {
+  describe('host initialization', function () {
 
-  describe('compileData', function () {
+    it('should validate the provided hostname and data repository options', function () {
+      expect(reposUpload.ReposUpload).to.throw();
 
-    var result;
-    beforeEach(function () {
-      result = Rowdata.compileData([
-        {
-          "id": "gate_a",
-          "name": "Gate A"
-        },
-        {
-          "id": "gate_b",
-          "name": "Gate B"
-        },
-        {
-          "id": "alindgren",
-          "name": "Anton Lindgren"
-        },
-        {
-          "id": "{{uuid}}",
-          "name": "PTL"
-        },
-        {
-          "id": "{{uuid}}",
-          "name": "PEL"
-        },
-        {
-          "name": "Unknown"
-        }
-      ]);
-    });
+      expect(reposUpload.ReposUpload.bind(null, {
+        hostname: 'http://localhost',
+        dataRepository: '/svn/lean-data/'
+      })).to.throw();
 
-    it('should replace missing ids', function () {
-      var json = JSON.parse(result);
-      json[5].id.length.should.equal(UUID_LENGTH);
-    });
+      expect(reposUpload.ReposUpload.bind(null, {
+        hostname: 'http://localhost',
+        dataRepository: 'svn/lean-data'
+      })).to.throw();
 
-    it('should replace moustache syntax uuids ({{uuid}})', function () {
-      var json = JSON.parse(result);
-      json[3].id.should.not.equal('{{uuid}}');
-      json[3].id.length.should.equal(UUID_LENGTH);
-      json[4].id.should.not.equal('{{uuid}}');
-      json[4].id.length.should.equal(UUID_LENGTH);
-    });
+      expect(reposUpload.ReposUpload.bind(null, {
+        hostname: 'http://localhost/',
+        dataRepository: '/svn/lean-data'
+      })).to.throw();
 
-    it('should ignore already set ids', function () {
-      var json = JSON.parse(result);
-      json[0].id.should.equal('gate_a');
-      json[1].id.should.equal('gate_b');
+      expect(reposUpload.ReposUpload.bind(null, {
+        hostname: 'http://localhost',
+        dataRepository: '/svn/lean-data'
+      })).not.to.throw();
     });
   });
 });

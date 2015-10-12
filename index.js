@@ -9,6 +9,13 @@ function ReposUpload(config) {
   if (!config.hostname) throw new Error('Missing option "hostname" [http://localhost]');
   if (!config.dataRepository) throw new Error('Missing option "dataRepository" [/svn/lean-data]');
 
+  var leadingRe = /^\//;
+  var trailingRe = /\/$/;
+
+  if (trailingRe.test(config.hostname)) throw new Error('Invalid "hostname" option provided. Remove trailing slash!');
+  if (trailingRe.test(config.dataRepository)) throw new Error('Invalid "dataRepository" option provided. Remove trailing slash!');
+  if (!leadingRe.test(config.dataRepository)) throw new Error('Invalid "dataRepository" option provided. Include leading slash!');
+
   function createFile(fileUrl, data, callback) {
     var createMissing = fileExists(fileUrl)
       .then(function(status) {
