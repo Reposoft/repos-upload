@@ -7,7 +7,6 @@
   },
   "author": "Yolean AB",
   "dependencies": {
-    "node-uuid": "^1.4.3",
     "promise": "^7.0.3",
     "superagent": "^1.2.0"
   },

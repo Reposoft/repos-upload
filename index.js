@@ -1,6 +1,5 @@
 var Promise = this.Promise || require('promise');
 var request = require('superagent');
-var uuid = require('node-uuid');
 
 function Rowdata(config) {
   if (!this instanceof Rowdata) {
@@ -187,16 +186,7 @@ function parseErrorMsg(err) {
 }
 
 function compileData(rowData) {
-  var copy = JSON.parse(JSON.stringify(rowData));
-
-  var re = /\{\{uuid\}\}/gi;
-  copy.forEach(function (row) {
-    if (!row.id || row.id.match(re)) {
-      row.id = uuid.v4();
-    }
-  });
-
-  return JSON.stringify(copy);
+  return JSON.stringify(rowData);
 }
 
 module.exports = Rowdata;
