@@ -193,7 +193,7 @@ function parseErrorMsg(err) {
 }
 
 function compileData(rowData) {
-  return JSON.stringify(rowData);
+  return JSON.stringify(rowData, null, 2);
 }
 
 exports.ReposUpload = ReposUpload;
