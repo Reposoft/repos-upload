@@ -16,6 +16,8 @@ function ReposUpload(config) {
   if (trailingRe.test(config.dataRepository)) throw new Error('Invalid "dataRepository" option provided. Remove trailing slash!');
   if (!leadingRe.test(config.dataRepository)) throw new Error('Invalid "dataRepository" option provided. Include leading slash!');
 
+  var auth = config.auth || {};
+
   function createFile(fileUrl, data, callback) {
     var createMissing = fileExists(fileUrl)
       .then(function(status) {
@@ -61,6 +63,7 @@ function ReposUpload(config) {
 
         request
           .post(url)
+          .auth(auth.user, auth.password)
           .type('form')
           .accept('json')
           .send(data)
@@ -82,6 +85,7 @@ function ReposUpload(config) {
         // It seems that head requests do not follow redirects
         // https://github.com/visionmedia/superagent/issues/669
         .get(config.hostname + path)
+        .auth(auth.user, auth.password)
         .end(function(err, res) {
           if (!res && !(err || {}).status) {
             return reject('Missing status code for: ' + path);
@@ -98,6 +102,7 @@ function ReposUpload(config) {
     return new Promise(function(fulfill, reject) {
       request
         .get(url)
+        .auth(auth.user, auth.password)
         .end(function(err, res) {
           if (err) {
             return reject('Unable to get file with url: "' + url + '", status: ' + err);
@@ -157,6 +162,7 @@ function ReposUpload(config) {
 
       request
         .post(url)
+        .auth(auth.user, auth.password)
         .type('form')
         .accept('json')
         .send(data)
