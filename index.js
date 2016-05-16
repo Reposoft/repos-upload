@@ -16,7 +16,7 @@ function ReposUpload(config) {
   if (trailingRe.test(config.dataRepository)) throw new Error('Invalid "dataRepository" option provided. Remove trailing slash!');
   if (!leadingRe.test(config.dataRepository)) throw new Error('Invalid "dataRepository" option provided. Include leading slash!');
 
-  var auth = config.auth || {};
+  var auth = config.auth || { user: '', password: '' };
 
   function createFile(fileUrl, data, callback) {
     var createMissing = fileExists(fileUrl)
