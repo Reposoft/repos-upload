@@ -36,46 +36,87 @@ function ReposUpload(config) {
     }, callback);
   }
 
+  // Like createFile but assumes an existing file
+  function writeFile(fileUrl, data, callback) {
+    var createMissing = fileExists(fileUrl)
+      .then(function(status) {
+        var dataString = compileData(data);
+        if (status === 200) return updateFile(fileUrl, dataString);
+        if (status === 404) return addFile(fileUrl, dataString);
+
+        // Some other error, how do we handle this?
+        return Promise.reject('Unknown error, status: ' + status);
+    });
+
+    createMissing.then(function (result) {
+      callback(null, result);
+    }, callback);
+  }
+
   function addFile(fileUrl, fileData) {
     return createFoldersForFile(fileUrl).then(function () {
-      return new Promise(function(fulfill, reject) {
 
-        var filename = fileUrl.split('/').pop();
-        var path = fileUrl
-          .replace(config.hostname, '')
-          .replace(config.dataRepository, '')
-          .replace(filename, '');
+      var filename = fileUrl.split('/').pop();
+      var path = fileUrl
+        .replace(config.hostname, '')
+        .replace(config.dataRepository, '')
+        .replace(filename, '');
 
-        var base = config.dataRepository.split('/').pop();
+      var base = config.dataRepository.split('/').pop();
 
-        var data = {
-          base: base,
-          target: path,
-          name: filename,
-          usertext: fileData,
-          fromrev: 'HEAD',
-          message: 'Yolean Rowdata add file',
-          type: 'upload',
-          create: 'yes'
-        };
+      var data = {
+        base: base,
+        target: path,
+        name: filename,
+        usertext: fileData,
+        fromrev: 'HEAD',
+        message: 'Yolean Rowdata add file',
+        type: 'upload',
+        create: 'yes'
+      };
 
-        var url = config.hostname + config.dataRepository + '/?rweb=e.upload';
+      var url = config.hostname + config.dataRepository + '/?rweb=e.upload';
 
-        request
-          .post(url)
-          .auth(auth.user, auth.password)
-          .type('form')
-          .accept('json')
-          .send(data)
-          .end(function(err, res) {
-            if (err) {
-              var msg = parseErrorMsg(err);
-              return reject(msg);
-            }
-            else if (res.ok) return fulfill(true);
-            else reject('Unknown error');
-          });
-      });
+      return postFile(url, data);
+    });
+  }
+
+  function updateFile(fileUrl, fileData) {
+    return createFoldersForFile(fileUrl).then(function () {
+
+      var data = {
+        usertext: fileData,
+        fromrev: 'HEAD',
+        message: 'Yolean Rowdata update file',
+        type: 'upload'
+      };
+
+      var filePath = fileUrl
+        .replace(config.hostname, '')
+        .replace(config.dataRepository, '');
+
+      var url = config.hostname + config.dataRepository + filePath + '/?rweb=e.upload';
+
+      return postFile(url, data);
+    });
+  }
+
+  function postFile(url, data) {
+    return new Promise(function(fulfill, reject) {
+      request
+        .post(url)
+        .auth(auth.user, auth.password)
+        .type('form')
+        .accept('json')
+        .send(data)
+        .end(function(err, res) {
+          if (err) {
+            var msg = parseErrorMsg(err);
+            return reject(msg);
+          }
+          else if (res.ok) return fulfill(true);
+          else reject('Unknown error');
+        });
     });
   }
 
@@ -181,6 +222,7 @@ function ReposUpload(config) {
   }
 
   this.createFile = createFile;
+  this.writeFile = writeFile;
 
   return this;
 }
@@ -198,8 +240,9 @@ function parseErrorMsg(err) {
   return msg;
 }
 
-function compileData(rowData) {
-  return JSON.stringify(rowData, null, 2);
+function compileData(data) {
+  if (typeof data === 'string') return data;
+  else return JSON.stringify(data, null, 2);
 }
 
 exports.ReposUpload = ReposUpload;
