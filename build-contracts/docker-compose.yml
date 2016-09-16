@@ -1,0 +1,12 @@
+version: "2"
+services:
+  rweb:
+    image: solsson/rweb
+  client:
+    labels:
+      - "com.yolean.build-contract"
+    build: ./client
+    volumes:
+      - ../:/usr/src/app/node_modules/repos-upload
+    links:
+      - rweb
