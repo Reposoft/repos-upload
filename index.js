@@ -1,5 +1,6 @@
 var Promise = this.Promise || require('promise');
 var request = require('superagent');
+require('superagent-retry')(request);
 
 function ReposUpload(config) {
   if (!this instanceof ReposUpload) {

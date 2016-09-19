@@ -2,10 +2,10 @@ FROM node:6
 
 WORKDIR /usr/src/app
 
-COPY package.json
+COPY package.json .
 
 RUN npm install
 
 COPY . .
 
-ENTRYPOINT ["./node_modules/.bin/mocha", "--no-timeouts"]
+ENTRYPOINT ["./node_modules/.bin/mocha", "index.js", "--no-timeouts"]
