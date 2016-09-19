@@ -25,7 +25,9 @@ services:
     labels:
       - "com.yolean.build-contract"
     build: ./client
+    environment:
+      DEBUG: $DEBUG
     volumes:
       - ../:/usr/src/app/node_modules/repos-upload
     links:
-      - rweb
+      - svn

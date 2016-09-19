@@ -3,7 +3,7 @@ var request = require('superagent');
 require('superagent-retry')(request);
 
 function ReposUpload(config) {
-  if (!this instanceof ReposUpload) {
+  if (!(this instanceof ReposUpload)) {
     return new ReposUpload(config);
   }
 
@@ -19,6 +19,29 @@ function ReposUpload(config) {
 
   var auth = config.auth || { user: '', password: '' };
 
+  function createRepository(callback) {
+    var repoName = config.dataRepository.split('/').pop();
+
+    fileExists('/' + repoName).then(function (status) {
+      if (status === 200) return callback(null, status);
+      if (status !== 404) return callback(new Error('Unknown error, status: ' + status));
+
+      // Repository missing. Create it
+
+      request
+        .post(config.hostname + '/admin/repocreate')
+        .auth(auth.user, auth.password)
+        .type('form')
+        .accept('json')
+        .send({ reponame: repoName })
+        .end(function (err, result) {
+          if (err) return callback(err);
+          console.log('RESULT', result);
+          callback(null);
+        });
+    }, callback);
+  }
+
   function createFile(fileUrl, data, callback) {
     var createMissing = fileExists(fileUrl)
       .then(function(status) {
@@ -29,7 +52,7 @@ function ReposUpload(config) {
         }
 
         // Some other error, how do we handle this?
-        return Promise.reject('Unknown error, status: ' + status);
+        return Promise.reject(new Error('Unknown error, status: ' + status));
     });
 
     createMissing.then(function (result) {
@@ -130,7 +153,7 @@ function ReposUpload(config) {
         .auth(auth.user, auth.password)
         .end(function(err, res) {
           if (!res && !(err || {}).status) {
-            return reject('Missing status code for: ' + path);
+            return reject(new Error('Missing status code for: ' + path));
           }
 
           fulfill((res || err).status);
@@ -222,6 +245,7 @@ function ReposUpload(config) {
     });
   }
 
+  this.createRepository = createRepository;
   this.createFile = createFile;
   this.writeFile = writeFile;
 
