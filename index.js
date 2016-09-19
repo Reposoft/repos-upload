@@ -2,6 +2,8 @@ var Promise = this.Promise || require('promise');
 var request = require('superagent');
 var retry = require('retry');
 
+var DEFAULT_RETRIES = 3;
+
 function ReposUpload(config) {
   if (!(this instanceof ReposUpload)) {
     return new ReposUpload(config);
@@ -18,6 +20,8 @@ function ReposUpload(config) {
   if (!leadingRe.test(config.dataRepository)) throw new Error('Invalid "dataRepository" option provided. Include leading slash!');
 
   var auth = config.auth || { user: '', password: '' };
+  // We check against undefined and not just falsy values as 0 should be valid here
+  var nRetries = config.nRetries !== undefined ? config.nRetries : DEFAULT_RETRIES;
 
   function createRepository(callback) {
     var repoName = config.dataRepository.split('/').pop();
@@ -247,7 +251,7 @@ function ReposUpload(config) {
   this.createFile = createFile;
   this.writeFile = writeFile;
 
-  retry.wrap(this, { retries: 10, randomize: true },
+  retry.wrap(this, { retries: config.nRetries, randomize: true },
     ['createFile', 'writeFile']);
 
   return this;
