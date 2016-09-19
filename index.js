@@ -1,6 +1,6 @@
 var Promise = this.Promise || require('promise');
 var request = require('superagent');
-require('superagent-retry')(request);
+var retry = require('retry');
 
 function ReposUpload(config) {
   if (!(this instanceof ReposUpload)) {
@@ -27,7 +27,6 @@ function ReposUpload(config) {
       if (status !== 404) return callback(new Error('Unknown error, status: ' + status));
 
       // Repository missing. Create it
-
       request
         .post(config.hostname + '/admin/repocreate')
         .auth(auth.user, auth.password)
@@ -36,7 +35,6 @@ function ReposUpload(config) {
         .send({ reponame: repoName })
         .end(function (err, result) {
           if (err) return callback(err);
-          console.log('RESULT', result);
           callback(null);
         });
     }, callback);
@@ -248,6 +246,9 @@ function ReposUpload(config) {
   this.createRepository = createRepository;
   this.createFile = createFile;
   this.writeFile = writeFile;
+
+  retry.wrap(this, { retries: 10, randomize: true },
+    ['createFile', 'writeFile']);
 
   return this;
 }
