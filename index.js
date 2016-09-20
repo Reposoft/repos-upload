@@ -21,7 +21,8 @@ function ReposUpload(config) {
 
   var auth = config.auth || { user: '', password: '' };
   // We check against undefined and not just falsy values as 0 should be valid here
-  var nRetries = config.nRetries !== undefined ? config.nRetries : DEFAULT_RETRIES;
+  var nRetries = DEFAULT_RETRIES;
+  if (config.nRetries !== undefined) nRetries = config.nRetries;
 
   function createRepository(callback) {
     var repoName = config.dataRepository.split('/').pop();
@@ -251,7 +252,7 @@ function ReposUpload(config) {
   this.createFile = createFile;
   this.writeFile = writeFile;
 
-  retry.wrap(this, { retries: config.nRetries, randomize: true },
+  retry.wrap(this, { retries: nRetries, randomize: true },
     ['createFile', 'writeFile']);
 
   return this;
