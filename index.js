@@ -97,7 +97,7 @@ function ReposUpload(config) {
         name: filename,
         usertext: fileData,
         fromrev: 'HEAD',
-        message: 'Yolean Rowdata add file',
+        message: 'repos-upload add file',
         type: 'upload',
         create: 'yes'
       };
@@ -114,7 +114,7 @@ function ReposUpload(config) {
       var data = {
         usertext: fileData,
         fromrev: 'HEAD',
-        message: 'Yolean Rowdata update file',
+        message: 'repos-upload update file',
         type: 'upload'
       };
 
@@ -222,7 +222,7 @@ function ReposUpload(config) {
         base: base,
         target: parentFolder,
         name: folderName,
-        message: 'Yolean Rowdata add folder',
+        message: 'repos-upload add folder',
         submit: 'Create'
       };
 
