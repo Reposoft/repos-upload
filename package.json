@@ -8,6 +8,7 @@
   "author": "Yolean AB",
   "dependencies": {
     "promise": "^7.0.3",
+    "retry": "0.10.0",
     "superagent": "^1.2.0"
   },
   "devDependencies": {

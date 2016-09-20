@@ -1,8 +1,11 @@
 var Promise = this.Promise || require('promise');
 var request = require('superagent');
+var retry = require('retry');
+
+var DEFAULT_RETRIES = 3;
 
 function ReposUpload(config) {
-  if (!this instanceof ReposUpload) {
+  if (!(this instanceof ReposUpload)) {
     return new ReposUpload(config);
   }
 
@@ -17,6 +20,30 @@ function ReposUpload(config) {
   if (!leadingRe.test(config.dataRepository)) throw new Error('Invalid "dataRepository" option provided. Include leading slash!');
 
   var auth = config.auth || { user: '', password: '' };
+  // We check against undefined and not just falsy values as 0 should be valid here
+  var nRetries = DEFAULT_RETRIES;
+  if (config.nRetries !== undefined) nRetries = config.nRetries;
+
+  function createRepository(callback) {
+    var repoName = config.dataRepository.split('/').pop();
+
+    fileExists('/' + repoName).then(function (status) {
+      if (status === 200) return callback(null, status);
+      if (status !== 404) return callback(new Error('Unknown error, status: ' + status));
+
+      // Repository missing. Create it
+      request
+        .post(config.hostname + '/admin/repocreate')
+        .auth(auth.user, auth.password)
+        .type('form')
+        .accept('json')
+        .send({ reponame: repoName })
+        .end(function (err, result) {
+          if (err) return callback(err);
+          callback(null);
+        });
+    }, callback);
+  }
 
   function createFile(fileUrl, data, callback) {
     var createMissing = fileExists(fileUrl)
@@ -28,7 +55,7 @@ function ReposUpload(config) {
         }
 
         // Some other error, how do we handle this?
-        return Promise.reject('Unknown error, status: ' + status);
+        return Promise.reject(new Error('Unknown error, status: ' + status));
     });
 
     createMissing.then(function (result) {
@@ -129,7 +156,7 @@ function ReposUpload(config) {
         .auth(auth.user, auth.password)
         .end(function(err, res) {
           if (!res && !(err || {}).status) {
-            return reject('Missing status code for: ' + path);
+            return reject(new Error('Missing status code for: ' + path));
           }
 
           fulfill((res || err).status);
@@ -221,8 +248,12 @@ function ReposUpload(config) {
     });
   }
 
+  this.createRepository = createRepository;
   this.createFile = createFile;
   this.writeFile = writeFile;
+
+  retry.wrap(this, { retries: nRetries, randomize: true },
+    ['createFile', 'writeFile']);
 
   return this;
 }
