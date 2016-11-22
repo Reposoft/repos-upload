@@ -3,15 +3,17 @@
   "version": "0.1.0",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha"
+    "test": "./node_modules/build-contract/build-contract"
   },
   "author": "Yolean AB",
   "dependencies": {
+    "async": "2.1.2",
     "promise": "^7.0.3",
     "retry": "0.10.0",
     "superagent": "^1.2.0"
   },
   "devDependencies": {
+    "build-contract": "1.1.0",
     "chai": "^3.2.0",
     "mocha": "^2.2.5"
   },

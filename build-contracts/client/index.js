@@ -35,4 +35,32 @@ describe('repos-upload', function () {
       });
     });
   });
+
+  describe('.createFile()', function () {
+
+    it('should never try to overwrite existing files', function (done) {
+
+      const reposHost = new reposUpload.ReposUpload({
+        hostname: 'http://svn',
+        dataRepository: '/svn/write-file-test',
+        auth: { user: 'test', password: '' }
+      });
+
+      reposHost.createRepository(function (err) {
+        if (err) return done(err);
+
+        const fileName = '/svn/write-file-test/' + uuid.v4() + '.txt';
+        reposHost.createFile(fileName, 'A', err => {
+          if (err) return done(err);
+
+          console.log('Created file. We should be done quickly now ...');
+          reposHost.createFile(fileName, 'A', err => {
+            if (err) return done(err);
+
+            done();
+          });
+        });
+      });
+    });
+  });
 });

@@ -1,6 +1,6 @@
 var Promise = this.Promise || require('promise');
 var request = require('superagent');
-var retry = require('retry');
+var async = require('async');
 
 var DEFAULT_RETRIES = 3;
 
@@ -155,11 +155,11 @@ function ReposUpload(config) {
         .get(config.hostname + path)
         .auth(auth.user, auth.password)
         .end(function(err, res) {
-          if (!res && !(err || {}).status) {
+          if (!res && !(err || {}).statusCode) {
             return reject(new Error('Missing status code for: ' + path));
           }
 
-          fulfill((res || err).status);
+          fulfill((res || {}).statusCode);
         });
     });
   }
@@ -249,11 +249,8 @@ function ReposUpload(config) {
   }
 
   this.createRepository = createRepository;
-  this.createFile = createFile;
-  this.writeFile = writeFile;
-
-  retry.wrap(this, { retries: nRetries, randomize: true },
-    ['createFile', 'writeFile']);
+  this.createFile = async.retryable(nRetries, createFile);
+  this.writeFile = async.retryable(nRetries, writeFile);
 
   return this;
 }
