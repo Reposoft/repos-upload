@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/build-contract/build-contract"
+    "test": "./node_modules/build-contract/build-contract",
+    "prepublish": "npm test"
   },
   "author": "Yolean AB",
   "dependencies": {
