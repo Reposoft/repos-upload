@@ -1,6 +1,6 @@
 {
   "name": "repos-upload",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "index.js",
   "scripts": {
     "test": "./node_modules/build-contract/build-contract",
