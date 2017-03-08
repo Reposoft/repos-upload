@@ -10,6 +10,12 @@ services:
     image: solsson/rweb:latest
     expose:
       - "9000"
+  unittests:
+    build:
+      context: ../
+      dockerfile: Dockerfile.test
+    labels:
+      - "com.yolean.build-contract"
   client:
     labels:
       - "com.yolean.build-contract"
