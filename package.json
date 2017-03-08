@@ -7,6 +7,10 @@
     "prepublish": "npm test"
   },
   "author": "Yolean AB",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Reposoft/repos-upload.git"
+  },
   "dependencies": {
     "async": "2.1.2",
     "promise": "^7.0.3",
