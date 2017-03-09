@@ -13,7 +13,7 @@ services:
   unittests:
     build:
       context: ../
-      dockerfile: Dockerfile.test
+      dockerfile: build-contracts/unittests/Dockerfile
     labels:
       - "com.yolean.build-contract"
   client:
