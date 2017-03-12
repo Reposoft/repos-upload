@@ -24,7 +24,7 @@ reposHost.createRepository(function (err) {
   log('Created repository');
 
   reposHost.info(repo + '/a/b/c/fileFromString.txt', function(err, res) {
-    log('Missing file got status: ' + res.statusCode);
+    log('Missing file got statusCode: ' + res.statusCode);
   }, function(info) {
     log('Warming. Info returns ok for nonexistent file.');
   });
@@ -68,7 +68,7 @@ window.handleFiles = function(fileList) {
     log('Created sample file from blob: ' + file.name);
 
     reposHost.info(repo + '/a/b/c/fileFromBlob' + ext, console.error, function(info) {
-      log('')
+      log(file.size === info.size ? 'Yes! Size is good.' : 'Failed upload, size is ' + info.size + ' instead of expected ' + file.size);
 
       console.log('Got info', info);
     });

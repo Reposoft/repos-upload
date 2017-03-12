@@ -50,6 +50,9 @@ function ReposUpload(config) {
       .then(function(status) {
         if (status === 200) return Promise.resolve();
         if (status === 404) {
+          if (data instanceof File) {
+            return addFile(fileUrl, data);
+          }
           var dataString = compileData(data);
           return addFile(fileUrl, dataString);
         }
@@ -95,7 +98,6 @@ function ReposUpload(config) {
         base: base,
         target: path,
         name: filename,
-        usertext: fileData,
         fromrev: 'HEAD',
         message: 'repos-upload add file',
         type: 'upload',
@@ -103,6 +105,17 @@ function ReposUpload(config) {
       };
 
       var url = config.hostname + config.dataRepository + '/?rweb=e.upload';
+
+      if (fileData instanceof File) {
+        var formData = new FormData();
+        Object.keys(data).map(function(key) {
+          formData.set(key, data[key]);
+        });
+        formData.set('userfile', fileData);
+        data = formData;
+      } else {
+        data.usertext = fileData;
+      }
 
       return postFile(url, data);
     });
@@ -133,7 +146,7 @@ function ReposUpload(config) {
       request
         .post(url)
         .auth(auth.user, auth.password)
-        .type('form')
+        .type(data instanceof FormData ? undefined : 'form')
         .accept('json')
         .send(data)
         .end(function(err, res) {
@@ -171,6 +184,11 @@ function ReposUpload(config) {
 
         var keys = Object.keys(svnlist.list);
         if (keys.length !== 1) throw new Error('Unexpected info, multiple entries. Is it a folder? Use .details() instead, as info is based on ls.');
+
+        if (typeof svnlist.list[keys[0]].size === 'string') { // RWEB-ISSUE size is an integer but of string type
+          svnlist.list[keys[0]].size = parseInt(svnlist.list[keys[0]].size);
+        }
+
         return jsonCallback(svnlist.list[keys[0]]);
       });
   }
