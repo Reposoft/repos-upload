@@ -1,12 +1,17 @@
 FROM solsson/rweb-httpd:latest
 
-RUN curl -sL https://deb.nodesource.com/setup_6.x | bash - \
+RUN apt-get update \
+  && apt-get install -y apt-transport-https lsb-release curl \
+  && curl -s https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add - \
+  && echo 'deb https://deb.nodesource.com/node_6.x jessie main' > /etc/apt/sources.list.d/nodesource.list \
   && apt-get update \
   && apt-get install -y nodejs
 
 WORKDIR /usr/src/app/build-contracts/ui
 
 COPY . /usr/src/app
+
+RUN cd /usr/src/app && npm install
 
 RUN npm install \
   && ./node_modules/.bin/webpack \
