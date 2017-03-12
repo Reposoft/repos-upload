@@ -1,7 +1,9 @@
 version: "2"
 services:
   svn:
-    build: ./ui
+    build:
+      context: ../
+      dockerfile: build-contracts/ui/Dockerfile
     environment:
       ADMIN_REST_ACCESS: "true"
       RWEB: fpm
