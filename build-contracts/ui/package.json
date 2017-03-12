@@ -1,0 +1,17 @@
+{
+  "name": "repos-upload-test-ui",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "webpack": "2.2.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./lab/scrapetest1.js"
+  },
+  "author": "",
+  "license": "ISC"
+}

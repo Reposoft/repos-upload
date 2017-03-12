@@ -147,6 +147,52 @@ function ReposUpload(config) {
     });
   }
 
+  // info isn't a promise because you use it to see current status, not to fetch data
+  function info(path, errCallback, jsonCallback) {
+    request
+      .get(config.hostname + path)
+      .query({ rweb: 'json', serv: 'json' })
+      .set('Accept', 'application/json') // RWEB-ISSUE: understands only serv=json atm
+      .auth(auth.user, auth.password)
+      .end(function(err, res) {
+        // RWEB-ISSUE returns status 500 if the file does not exist
+        if (res.statusCode === 500 && /Could not read entry for URL/.test(res.text)) {
+          res.statusCode = 404; // TBD set .status too?
+          return errCallback(err, res);
+        }
+
+        if (err) return errCallback(err, res);
+
+        var svnlist = res.body;
+        // RWEB-ISSUE doesn't set Content-Type application/json on json resources
+        if (svnlist === null && res.type === 'text/plain') {
+          svnlist = JSON.parse(res.text);
+        }
+
+        var keys = Object.keys(svnlist.list);
+        if (keys.length !== 1) throw new Error('Unexpected info, multiple entries. Is it a folder? Use .details() instead, as info is based on ls.');
+        return jsonCallback(svnlist.list[keys[0]]);
+      });
+  }
+
+  // details is an expensive call that returns entry stats, recent history etc
+  function details(path) {
+    return new Promise(function(fulfill, reject) {
+      request
+        .get(config.hostname + path)
+        .query({ rweb: 'details', serv: 'json' })
+        .set('Accept', 'application/json') // but rweb understands only serv=json atm
+        .auth(auth.user, auth.password)
+        .end(function(err, res) {
+          if (!res && !(err || {}).statusCode) {
+            return reject(new Error('Missing status code for: ' + path));
+          }
+
+          fulfill(res.body || JSON.parse(res.text)); // rweb up to 1.6 does not set Content-Type properly
+        });
+    });
+  }
+
   function fileExists(path) {
     return new Promise(function(fulfill, reject) {
       request
@@ -251,6 +297,8 @@ function ReposUpload(config) {
   this.createRepository = createRepository;
   this.createFile = async.retryable(nRetries, createFile);
   this.writeFile = async.retryable(nRetries, writeFile);
+  this.info = info;
+  this.details = async.retryable(nRetries, details);
 
   return this;
 }
