@@ -1,7 +1,7 @@
 version: "2"
 services:
   svn:
-    image: solsson/rweb-httpd:latest
+    build: ./ui
     environment:
       ADMIN_REST_ACCESS: "true"
       RWEB: fpm
