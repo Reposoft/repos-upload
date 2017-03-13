@@ -13,5 +13,5 @@
     "start": "node ./lab/scrapetest1.js"
   },
   "author": "",
-  "license": "ISC"
+  "license": "Apache-2.0"
 }

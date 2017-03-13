@@ -50,7 +50,7 @@ function ReposUpload(config) {
       .then(function(status) {
         if (status === 200) return Promise.resolve();
         if (status === 404) {
-          if (data instanceof File) {
+          if (typeof File !== 'undefined' && data instanceof File) {
             return addFile(fileUrl, data);
           }
           var dataString = compileData(data);
@@ -106,7 +106,7 @@ function ReposUpload(config) {
 
       var url = config.hostname + config.dataRepository + '/?rweb=e.upload';
 
-      if (fileData instanceof File) {
+      if (typeof File !== 'undefined' && fileData instanceof File) {
         var formData = new FormData();
         Object.keys(data).map(function(key) {
           formData.set(key, data[key]);
@@ -146,7 +146,7 @@ function ReposUpload(config) {
       request
         .post(url)
         .auth(auth.user, auth.password)
-        .type(data instanceof FormData ? undefined : 'form')
+        .type(typeof FormData !== 'undefined' && data instanceof FormData ? undefined : 'form')
         .accept('json')
         .send(data)
         .end(function(err, res) {
@@ -161,6 +161,7 @@ function ReposUpload(config) {
   }
 
   // info isn't a promise because you use it to see current status, not to fetch data
+  // The benefit compared to the cheaper HEAD request is that you get info about latest commit, and size directly instead of through headers
   function info(path, errCallback, jsonCallback) {
     request
       .get(config.hostname + path)

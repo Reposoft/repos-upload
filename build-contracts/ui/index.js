@@ -14,63 +14,71 @@ var log = function(msg) {
   var li = document.createElement('li');
   li.appendChild(document.createTextNode(msg));
   document.querySelector('#log').appendChild(li);
+  return li;
+};
+
+var fail = function(msg) {
+  var li = log(msg);
+  li.setAttribute('class', 'failure');
+  li.setAttribute('style', 'color: red');
 };
 
 reposHost.createRepository(function (err) {
   if (err) {
-    log('Failed to create repository');
+    fail('Failed to create repository');
     return;
   }
   log('Created repository');
 
   reposHost.info(repo + '/a/b/c/fileFromString.txt', function(err, res) {
-    log('Missing file got statusCode: ' + res.statusCode);
+    log('Got status ' + res.statusCode + ' for missing file (404 is good but rweb tends to return 500)');
   }, function(info) {
-    log('Warming. Info returns ok for nonexistent file.');
+    fail('Warning. Info returns ok for nonexistent file.');
   });
 
-  reposHost.createFile(repo + '/a/b/c/fileFromString.txt', 'X', err => {
+  reposHost.createFile(repo + '/a/b/c/fileFromString.txt', 'Xyz', err => {
     if (err) {
-      log('Failed to create file from string');
-      return;
+      return fail('Failed to create file from string');
     }
     log('Created sample file from string');
 
     reposHost.info(repo + '/a/b/c/fileFromString.txt', console.error, function(info) {
-      console.log('Sting file info:', info);
+      if (3 !== info.size) {
+        return fail('Not the given string data? Size is ' + info.size);
+      }
+      log('String upload size is good');
     });
   });
 });
 
 window.handleFiles = function(fileList) {
   if (fileList.length !== 1) {
-    log('Unexpected file selection');
-    return;
+    return fail('Unexpected file selection');
   }
   var file = fileList[0];
 
   // TODO title as svn prop
-  console.log('File:', file);
   var ext = /\.[a-zA-Z0-9-]{1,8}$/.exec(file.name);
   if (!ext) {
-    log('Aborting due to unknown extension for selected file: ' + file.name + ' (mime type: ' + file.type + ')');
-    return;
+    return fail('Aborting due to unknown extension for selected file: ' + file.name + ' (mime type: ' + file.type + ')');
   } else {
     ext = ext[0];
-    log('Extension: ' + ext + ', mime-type: ' + file.type);
+    log('Extension: ' + ext + ', mime-type: ' + file.type + ', original name: ' + file.name);
   }
 
+  // RWEB-ISSUE files larger than PHP upload file limit result in pretty useless error messages
   reposHost.createFile(repo + '/a/b/c/fileFromBlob' + ext, file, err => {
     if (err) {
-      log('Failed to create file from Blob');
-      return;
+      return fail('Failed to create file from Blob');
     }
     log('Created sample file from blob: ' + file.name);
 
     reposHost.info(repo + '/a/b/c/fileFromBlob' + ext, console.error, function(info) {
-      log(file.size === info.size ? 'Yes! Size is good.' : 'Failed upload, size is ' + info.size + ' instead of expected ' + file.size);
-
-      console.log('Got info', info);
+      if (file.size !== info.size) {
+        return fail('Failed upload, size is ' + info.size + ' instead of expected ' + file.size);
+      }
+      log('Yes! Size of committed file is ' + info.size);
+      log('Commit is rev ' + info.commit.revision + ' date ' + info.commit.date + ' by ' + info.commit.author);
     });
   });
 };
