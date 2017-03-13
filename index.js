@@ -50,6 +50,9 @@ function ReposUpload(config) {
       .then(function(status) {
         if (status === 200) return Promise.resolve();
         if (status === 404) {
+          if (typeof File !== 'undefined' && data instanceof File) {
+            return addFile(fileUrl, data);
+          }
           var dataString = compileData(data);
           return addFile(fileUrl, dataString);
         }
@@ -95,7 +98,6 @@ function ReposUpload(config) {
         base: base,
         target: path,
         name: filename,
-        usertext: fileData,
         fromrev: 'HEAD',
         message: 'repos-upload add file',
         type: 'upload',
@@ -103,6 +105,17 @@ function ReposUpload(config) {
       };
 
       var url = config.hostname + config.dataRepository + '/?rweb=e.upload';
+
+      if (typeof File !== 'undefined' && fileData instanceof File) {
+        var formData = new FormData();
+        Object.keys(data).map(function(key) {
+          formData.set(key, data[key]);
+        });
+        formData.set('userfile', fileData);
+        data = formData;
+      } else {
+        data.usertext = fileData;
+      }
 
       return postFile(url, data);
     });
@@ -133,7 +146,7 @@ function ReposUpload(config) {
       request
         .post(url)
         .auth(auth.user, auth.password)
-        .type('form')
+        .type(typeof FormData !== 'undefined' && data instanceof FormData ? undefined : 'form')
         .accept('json')
         .send(data)
         .end(function(err, res) {
@@ -143,6 +156,58 @@ function ReposUpload(config) {
           }
           else if (res.ok) return fulfill(true);
           else reject('Unknown error');
+        });
+    });
+  }
+
+  // info isn't a promise because you use it to see current status, not to fetch data
+  // The benefit compared to the cheaper HEAD request is that you get info about latest commit, and size directly instead of through headers
+  function info(path, errCallback, jsonCallback) {
+    request
+      .get(config.hostname + path)
+      .query({ rweb: 'json', serv: 'json' })
+      .set('Accept', 'application/json') // RWEB-ISSUE: understands only serv=json atm
+      .auth(auth.user, auth.password)
+      .end(function(err, res) {
+        // RWEB-ISSUE returns status 500 if the file does not exist
+        if (res.statusCode === 500 && /Could not read entry for URL/.test(res.text)) {
+          res.statusCode = 404; // TBD set .status too?
+          return errCallback(err, res);
+        }
+
+        if (err) return errCallback(err, res);
+
+        var svnlist = res.body;
+        // RWEB-ISSUE doesn't set Content-Type application/json on json resources
+        if (svnlist === null && res.type === 'text/plain') {
+          svnlist = JSON.parse(res.text);
+        }
+
+        var keys = Object.keys(svnlist.list);
+        if (keys.length !== 1) throw new Error('Unexpected info, multiple entries. Is it a folder? Use .details() instead, as info is based on ls.');
+
+        if (typeof svnlist.list[keys[0]].size === 'string') { // RWEB-ISSUE size is an integer but of string type
+          svnlist.list[keys[0]].size = parseInt(svnlist.list[keys[0]].size);
+        }
+
+        return jsonCallback(svnlist.list[keys[0]]);
+      });
+  }
+
+  // details is an expensive call that returns entry stats, recent history etc
+  function details(path) {
+    return new Promise(function(fulfill, reject) {
+      request
+        .get(config.hostname + path)
+        .query({ rweb: 'details', serv: 'json' })
+        .set('Accept', 'application/json') // but rweb understands only serv=json atm
+        .auth(auth.user, auth.password)
+        .end(function(err, res) {
+          if (!res && !(err || {}).statusCode) {
+            return reject(new Error('Missing status code for: ' + path));
+          }
+
+          fulfill(res.body || JSON.parse(res.text)); // rweb up to 1.6 does not set Content-Type properly
         });
     });
   }
@@ -251,6 +316,8 @@ function ReposUpload(config) {
   this.createRepository = createRepository;
   this.createFile = async.retryable(nRetries, createFile);
   this.writeFile = async.retryable(nRetries, writeFile);
+  this.info = info;
+  this.details = async.retryable(nRetries, details);
 
   return this;
 }

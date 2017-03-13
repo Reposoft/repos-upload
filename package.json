@@ -1,22 +1,26 @@
 {
   "name": "repos-upload",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "main": "index.js",
   "scripts": {
     "test": "./node_modules/build-contract/build-contract",
     "prepublish": "npm test"
   },
-  "author": "Yolean AB",
+  "author": "Repos AB",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Reposoft/repos-upload.git"
+  },
   "dependencies": {
-    "async": "2.1.2",
-    "promise": "^7.0.3",
-    "retry": "0.10.0",
-    "superagent": "^1.2.0"
+    "async": "2.1.5",
+    "promise": "7.1.1",
+    "retry": "0.10.1",
+    "superagent": "3.5.0"
   },
   "devDependencies": {
     "build-contract": "1.1.0",
-    "chai": "^3.2.0",
-    "mocha": "^2.2.5"
+    "chai": "3.5.0",
+    "mocha": "3.2.0"
   },
-  "license": "MIT"
+  "license": "Apache-2.0"
 }

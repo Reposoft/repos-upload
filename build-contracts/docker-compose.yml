@@ -1,22 +1,23 @@
 version: "2"
 services:
   svn:
-    # :proxied is good because it has mod_auth_anon
-    image: "solsson/svn-httpd:proxied"
+    build:
+      context: ../
+      dockerfile: build-contracts/ui/Dockerfile
     environment:
       ADMIN_REST_ACCESS: "true"
-    volumes:
-      # Overrides default container config, to add SVNIndexXslt etc
-      - ../../rweb/test/conf-svn:/usr/local/apache2/conf/svn
-      # Persistent volumes make repatable tests harder, but expermienation easier
-      # There is no REST endpont to manage repositories, so we only have docker-compose exec svn repocreate
-      - ./svn:/svn
-      # PHP-FPM expects the app to be at the same path in both containers
-      - ../../rweb/:/opt/rweb
+      RWEB: fpm
+      AUTHN: anon
   rweb:
-    image: "solsson/rweb:libs"
-    volumes:
-      - ../../rweb/:/opt/rweb
+    image: solsson/rweb:latest
+    expose:
+      - "9000"
+  unittests:
+    build:
+      context: ../
+      dockerfile: build-contracts/unittests/Dockerfile
+    labels:
+      - "com.yolean.build-contract"
   client:
     labels:
       - "com.yolean.build-contract"
