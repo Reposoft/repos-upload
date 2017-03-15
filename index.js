@@ -215,9 +215,7 @@ function ReposUpload(config) {
   function fileExists(path) {
     return new Promise(function(fulfill, reject) {
       request
-        // It seems that head requests do not follow redirects
-        // https://github.com/visionmedia/superagent/issues/669
-        .get(config.hostname + path)
+        .head(config.hostname + path).redirects(2)
         .auth(auth.user, auth.password)
         .end(function(err, res) {
           if (!res && !(err || {}).statusCode) {
