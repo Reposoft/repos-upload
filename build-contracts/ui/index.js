@@ -36,7 +36,10 @@ reposHost.createRepository(function (err) {
     fail('Warning. Info returns ok for nonexistent file.');
   });
 
-  reposHost.createFile(repo + '/a/b/c/fileFromString.txt', 'Xyz', err => {
+  reposHost.createFile(repo + '/a/b/c/fileFromString.txt', 'Xyz', {
+    'cms:some-prop': 'value1',
+    'cms:other-prop': 'X Y Z' // RWEB-ISSUE no newline support? 'X\nY\nZ'
+  }, err => {
     if (err) {
       return fail('Failed to create file from string');
     }
@@ -47,7 +50,17 @@ reposHost.createRepository(function (err) {
         return fail('Not the given string data? Size is ' + info.size);
       }
       log('String upload size is good');
+
+      reposHost.details(repo + '/a/b/c/fileFromString.txt', function(err, json) {
+        if (err) return fail('Failed to fetch details');
+        if (json.proplist.cms['cms:some-prop'][0] === 'value1') {
+          log('The new file was committed with the given properties');
+        } else {
+          console.log('details', json);
+        }
+      });
     });
+
   });
 });
 

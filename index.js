@@ -4,6 +4,9 @@ var async = require('async');
 
 var DEFAULT_RETRIES = 3;
 
+// https://github.com/Reposoft/rweb/blob/v1.6.0/repos-web/edit/upload/index.php#L24
+var UPLOAD_PROP_PREFIX = 'prop_';
+
 function ReposUpload(config) {
   if (!(this instanceof ReposUpload)) {
     return new ReposUpload(config);
@@ -46,15 +49,21 @@ function ReposUpload(config) {
   }
 
   function createFile(fileUrl, data, callback) {
+    var versionedProps = {};
+    if (typeof callback === 'object' && typeof arguments[3] === 'function') {
+      versionedProps = callback;
+      callback = arguments[3];
+    }
+
     var createMissing = fileExists(fileUrl)
       .then(function(status) {
         if (status === 200) return Promise.resolve();
         if (status === 404) {
           if (typeof File !== 'undefined' && data instanceof File) {
-            return addFile(fileUrl, data);
+            return addFile(fileUrl, data, versionedProps);
           }
           var dataString = compileData(data);
-          return addFile(fileUrl, dataString);
+          return addFile(fileUrl, dataString, versionedProps);
         }
 
         // Some other error, how do we handle this?
@@ -83,7 +92,7 @@ function ReposUpload(config) {
     }, callback);
   }
 
-  function addFile(fileUrl, fileData) {
+  function addFile(fileUrl, fileData, versionedProps) {
     return createFoldersForFile(fileUrl).then(function () {
 
       var filename = fileUrl.split('/').pop();
@@ -103,6 +112,12 @@ function ReposUpload(config) {
         type: 'upload',
         create: 'yes'
       };
+
+      for (var propname in versionedProps) {
+        if (versionedProps.hasOwnProperty(propname)) {
+          data[UPLOAD_PROP_PREFIX + propname] = versionedProps[propname];
+        }
+      }
 
       var url = config.hostname + config.dataRepository + '/?rweb=e.upload';
 
@@ -195,8 +210,8 @@ function ReposUpload(config) {
   }
 
   // details is an expensive call that returns entry stats, recent history etc
-  function details(path) {
-    return new Promise(function(fulfill, reject) {
+  function details(path, callback) {
+    var details = new Promise(function(fulfill, reject) {
       request
         .get(config.hostname + path)
         .query({ rweb: 'details', serv: 'json' })
@@ -209,6 +224,10 @@ function ReposUpload(config) {
 
           fulfill(res.body || JSON.parse(res.text)); // rweb up to 1.6 does not set Content-Type properly
         });
+    });
+
+    details.then(function(json) {
+      callback(null, json);
     });
   }
 
