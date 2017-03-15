@@ -8,6 +8,12 @@ services:
       ADMIN_REST_ACCESS: "true"
       RWEB: fpm
       AUTHN: anon
+    # Uncomment ports and volumes for client side development, but comment out for build
+    # Rweb will only work when this service is accessed through a http://svn/ hosts file record
+    #ports:
+    #  - "80:80"
+    #volumes:
+    #  - ./ui:/usr/local/apache2/htdocs
   rweb:
     image: solsson/rweb:latest
     expose:
